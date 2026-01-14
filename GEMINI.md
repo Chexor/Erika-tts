@@ -1,6 +1,6 @@
-# Kyutai Pocket TTS Project Overview
+# Erika TTS Project Overview
 
-This directory contains a Python Text-to-Speech (TTS) project named "Kyutai Pocket TTS". It offers a flexible solution for generating speech from text, providing both a web API and a command-line interface (CLI). A key feature is its ability to clone voices from provided audio prompts, which can be local files, HTTP/HTTPS URLs, or Hugging Face repository URLs.
+This directory contains a Python Text-to-Speech (TTS) project named "Erika TTS". It is a personalized wrapper around Kyutai's Pocket TTS library, offering a flexible solution for generating speech from text with both a web API and a command-line interface (CLI). A key feature is its ability to clone voices from provided audio prompts, which can be local files, HTTP/HTTPS URLs, or Hugging Face repository URLs.
 
 ## Main Technologies
 
@@ -48,7 +48,7 @@ For direct speech generation to an audio file, use the `generate` command:
 
 ```bash
 # Generate speech with default settings (ensure virtual environment is activated)
-pocket-tts generate --text "Hello, this is a test from Kyutai Pocket TTS." --output-path my_output.wav
+pocket-tts generate --text "Hello, this is a test from Erika TTS." --output-path my_output.wav
 
 # Generate speech using a custom voice prompt and specific parameters
 pocket-tts generate \

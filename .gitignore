@@ -11,11 +11,18 @@ __pycache__/
 erika_tts_output/
 *.wav
 
+# User settings (use erika_settings.example.yaml as template)
+erika_settings.yaml
+
 # IDE
 .idea/
+.vscode/
 
 # Environment variables
 .env
 
+# AI assistant instructions (local only)
 CLAUDE.md
 GEMINI.md
+
+tts_output.WAV
