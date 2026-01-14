@@ -26,3 +26,10 @@ CLAUDE.md
 GEMINI.md
 
 tts_output.WAV
+
+# Logs
+*.log
+
+# Agent directories
+.gemini/
+.claude/
