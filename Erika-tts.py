@@ -58,19 +58,19 @@ def ensure_output_folder_exists(script_dir, output_folder_name):
     os.makedirs(output_path, exist_ok=True)
     return output_path
 
-def get_venv_activation_command(script_dir):
+def get_venv_python(script_dir):
     venv_path = os.path.join(script_dir, "venv")
-    activate_script = os.path.join(venv_path, "Scripts", "activate.bat")
+    python_exe = os.path.join(venv_path, "Scripts", "python.exe")
 
     if not os.path.isdir(venv_path):
         print(f"Error: Virtual environment not found at '{venv_path}'.")
         print("Please ensure 'venv' directory exists in the same location as this script.")
         sys.exit(1)
-    if not os.path.exists(activate_script):
-        print(f"Error: Virtual environment activation script not found at '{activate_script}'.")
+    if not os.path.exists(python_exe):
+        print(f"Error: Python executable not found at '{python_exe}'.")
         print("Please ensure the virtual environment is correctly set up for Windows.")
         sys.exit(1)
-    return f'call "{activate_script}"'
+    return python_exe
 
 def clean_old_audio_files(output_dir, max_audio_files):
     audio_files = sorted(
@@ -112,63 +112,55 @@ def erika_tts_generate(text_to_generate, settings, voice=None, custom_output_fil
     
     full_output_path = os.path.join(output_dir, output_filename)
 
-    venv_activation_command = get_venv_activation_command(script_dir)
+    python_exe = get_venv_python(script_dir)
 
-    # Construct the pocket-tts command
-    tts_command_parts = [
-        "pocket-tts", "generate",
-        "--text", f'"{text_to_generate}"',
-        "--output-path", f'"{full_output_path}"'
+    # Construct the pocket-tts command using python -m pocket_tts
+    command_args = [
+        python_exe, "-m", "pocket_tts", "generate",
+        "--text", text_to_generate,
+        "--output-path", full_output_path
     ]
-    if actual_voice: # Use actual_voice here
-        tts_command_parts.extend(["--voice", f'"{actual_voice}"'])
+    if actual_voice:
+        command_args.extend(["--voice", actual_voice])
 
     # Add generation settings from the config file
     gen_settings = settings["generation_settings"]
     for param, value in gen_settings.items():
-        if value is not None: # Only add if not None
+        if value is not None:
             # Convert snake_case to kebab-case for CLI arguments
-            tts_command_parts.extend([f"--{param.replace('_', '-')}", str(value)])
-
-    tts_command_str = " ".join(tts_command_parts)
-    full_execution_command = f'{venv_activation_command} && {tts_command_str}'
-    
-    command = full_execution_command
+            command_args.extend([f"--{param.replace('_', '-')}", str(value)])
 
     print(f"\n--- Generating TTS ---")
     print(f"Text: \"{text_to_generate}\"")
     print(f"Voice: {actual_voice if actual_voice else 'Default (from settings)'}")
     print(f"Output: {full_output_path}")
-    print(f"Executing: {full_execution_command}")
+    print(f"Executing: {' '.join(command_args)}")
 
     try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True, shell=True)
-        
-        print("\n--- STDOUT ---")
-        print(result.stdout)
-        print("--- STDERR ---")
-        print(result.stderr)
-        
+        result = subprocess.run(command_args, check=True, capture_output=True, text=True)
+
+        if result.stderr:
+            print(result.stderr)
+
         if os.path.exists(full_output_path):
             print(f"\nTTS generated successfully at {full_output_path}")
-            clean_old_audio_files(output_dir, settings["max_audio_files"]) # Pass max_audio_files from settings
+            clean_old_audio_files(output_dir, settings["max_audio_files"])
             print("Playing audio...")
             wave_obj = sa.WaveObject.from_wave_file(full_output_path)
             play_obj = wave_obj.play()
             play_obj.wait_done()
         else:
             print(f"\nError: Expected output file '{full_output_path}' was not created.")
-            print("Please check the above STDERR for details.")
+            if result.stderr:
+                print(result.stderr)
 
     except subprocess.CalledProcessError as e:
-        print(f"\nError generating TTS: {e}")
-        print("\n--- STDOUT ---")
-        print(e.stdout)
-        print("--- STDERR ---")
-        print(e.stderr)
+        print(f"\nError generating TTS:")
+        if e.stderr:
+            print(e.stderr)
         print("\nPlease ensure 'pocket-tts' is installed in the virtual environment and the arguments are valid.")
     except FileNotFoundError:
-        print(f"Error: 'cmd.exe' not found. This script is intended for Windows.")
+        print(f"Error: Python executable not found.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
