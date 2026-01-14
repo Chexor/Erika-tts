@@ -16,6 +16,28 @@ if not hasattr(torch, '_original_load'):
         return torch._original_load(*args, **kwargs)
     torch.load = _safe_load
 
+# Monkey-patch torchaudio.load to use soundfile directly
+# This fixes the "TorchCodec required" error on nightly builds for Blackwell GPUs
+try:
+    import torchaudio
+    import soundfile as sf
+    
+    def _safe_audio_load(path, **kwargs):
+        # logging.info(f"Intercepted torchaudio.load for {path}")
+        data, sr = sf.read(path)
+        # sf.read returns (frames, channels) or (frames,)
+        tensor = torch.from_numpy(data).float()
+        if tensor.ndim == 1:
+            tensor = tensor.unsqueeze(0)
+        else:
+            tensor = tensor.t()
+        return tensor, sr
+        
+    torchaudio.load = _safe_audio_load
+    logging.info("Patched torchaudio.load to use soundfile.")
+except Exception as e:
+    logging.warning(f"Failed to patch torchaudio: {e}")
+
 # Try to import parkiet_engine (assume it's in the same dir)
 try:
     import parkiet_engine
