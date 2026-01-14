@@ -1,0 +1,11 @@
+# erika_settings.yaml
+default_voice: azelma
+output_folder_name: erika_tts_output
+max_audio_files: 5
+generation_settings:
+  temperature: 0.7
+  lsd_decode_steps: 1
+  noise_clamp: null
+  eos_threshold: -4.0
+  frames_after_eos: null
+  device: cpu

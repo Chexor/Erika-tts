@@ -1,0 +1,21 @@
+# Virtual environments
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Generated audio output
+erika_tts_output/
+*.wav
+
+# IDE
+.idea/
+
+# Environment variables
+.env
+
+CLAUDE.md
+GEMINI.md
