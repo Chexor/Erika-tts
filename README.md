@@ -116,3 +116,11 @@ scipy.io.wavfile.write("output.wav", tts_model.sample_rate, audio.numpy())
 You can clone any voice by providing a WAV file as the voice prompt. For best results:
 - Use clean audio samples without background noise
 - More voices available at [kyutai/tts-voices](https://huggingface.co/kyutai/tts-voices)
+
+## Roadmap
+
+Planned features:
+- [ ] **File input** - Read text from a file (`--file input.txt`)
+- [ ] **MP3 export** - Convert output to MP3 format
+- [ ] **System tray app** - Background app with hotkey to speak selected text
+- [ ] **Web API** - Local server for other apps to request TTS
