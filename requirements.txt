@@ -1,3 +1,7 @@
 pocket-tts
 simpleaudio
 PyYAML
+langdetect
+transformers>=4.56.2
+soundfile
+torch

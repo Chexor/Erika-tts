@@ -1,6 +1,7 @@
 # Virtual environments
 venv/
 .venv/
+venv312/
 
 # Python cache
 __pycache__/
@@ -29,6 +30,10 @@ tts_output.WAV
 
 # Logs
 *.log
+
+# Test outputs
+test_output.txt
+nul
 
 # Agent directories
 .gemini/
