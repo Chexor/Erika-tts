@@ -33,8 +33,6 @@ def get_voice_path(voice: str) -> str:
 
 import asyncio
 
-
-# Set up logging to file
 # Set up logging to file
 # Use force=True to override any existing logging config from FastMCP/libraries
 logging.basicConfig(
@@ -43,6 +41,34 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     force=True
 )
+
+def spawn_worker(text: str, voice: str):
+    """Refactored worker spawning logic."""
+    worker_script = os.path.join(SCRIPT_DIR, "speak_worker.py")
+    
+    # Use standard python.exe to allow console window (User request: visible window)
+    cmd = [VENV_PYTHON, worker_script, "--text", text, "--voice", voice]
+    
+    logging.info(f"Spawning worker: {cmd}")
+    
+    try:
+        # User wants a visible window, top-left.
+        # We need CREATE_NEW_CONSOLE (0x00000010) to force a separate window.
+        # We keep DETACHED_PROCESS/NEW_GROUP to avoid blocking.
+        
+        subprocess.Popen(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            close_fds=True,
+            creationflags=0x00000010 | 0x00000200 # CREATE_NEW_CONSOLE | NEW_GROUP
+        )
+        logging.info("Worker spawned successfully (visible console)")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to spawn worker: {e}")
+        return False
 
 @mcp.tool()
 async def speak(text: str, voice: str = DEFAULT_VOICE) -> str:
@@ -64,36 +90,10 @@ async def speak(text: str, voice: str = DEFAULT_VOICE) -> str:
 
     logging.info(f"Received speak request for: {text[:50]}...")
     
-    # Spawn the worker script detached
-    worker_script = os.path.join(SCRIPT_DIR, "speak_worker.py")
-    
-    cmd = [VENV_PYTHON, worker_script, "--text", text, "--voice", voice]
-    
-    logging.info(f"Spawning worker: {cmd}")
-    
-    try:
-        # Use Popen to start freely.
-        # DETACHED_PROCESS (0x00000008) is crucial to break away from parent console/process group.
-        # CREATE_NEW_PROCESS_GROUP (0x00000200) also helps.
-        # CREATE_NO_WINDOW (0x08000000) hides the window.
-        DETACHED_PROCESS = 0x00000008
-        CREATE_NEW_PROCESS_GROUP = 0x00000200
-        CREATE_NO_WINDOW = 0x08000000
-        
-        subprocess.Popen(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL, # Or Redirect to log file if needed, but worker handles its own logging
-            stderr=subprocess.DEVNULL,
-            close_fds=True,
-            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
-        )
-        logging.info("Worker spawned successfully with detached flags")
-    except Exception as e:
-        logging.error(f"Failed to spawn worker: {e}")
-        return f"Error starting speech: {e}"
-
-    return "🔊 Speaking..."
+    if spawn_worker(text, voice):
+        return "🔊 Speaking..."
+    else:
+        return "Error starting speech"
 
 
 @mcp.tool()
@@ -108,4 +108,6 @@ def list_voices() -> str:
 
 
 if __name__ == "__main__":
+    # Spoken notification on startup
+    spawn_worker("Voice server ready", DEFAULT_VOICE)
     mcp.run()
