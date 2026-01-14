@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 import os
@@ -6,6 +7,7 @@ import glob
 import time
 import yaml
 import simpleaudio as sa
+import wave
 
 SETTINGS_FILE = "erika_settings.yaml"
 ALLOWED_VOICES = ['alba', 'marius', 'javert', 'jean', 'fantine', 'cosette', 'eponine', 'azelma']

@@ -1,0 +1,16 @@
+{
+    "default_language": "en",
+    "fallback_audio_dir": "fallback_audio",
+    "languages": {
+        "en": {
+            "engine": "pocket_tts",
+            "voice": "azelma",
+            "fallback_file": "error_en.wav"
+        },
+        "nl": {
+            "engine": "coqui-xtts",
+            "voice": "voice_samples/Laura_VL.wav",
+            "fallback_file": "error_nl.wav"
+        }
+    }
+}
