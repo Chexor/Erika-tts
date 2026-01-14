@@ -122,5 +122,6 @@ You can clone any voice by providing a WAV file as the voice prompt. For best re
 Planned features:
 - [ ] **File input** - Read text from a file (`--file input.txt`)
 - [ ] **MP3 export** - Convert output to MP3 format
+- [ ] **Streaming TTS** - Stream audio for larger texts instead of waiting for full generation
 - [ ] **System tray app** - Background app with hotkey to speak selected text
 - [ ] **Web API** - Local server for other apps to request TTS
