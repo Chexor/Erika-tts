@@ -17,7 +17,7 @@ mcp = FastMCP("gemini-voice")
 
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-VENV_PYTHON = os.path.join(SCRIPT_DIR, "venv", "Scripts", "python.exe")
+VENV_PYTHON = os.path.join(SCRIPT_DIR, ".venv", "Scripts", "python.exe")
 ALLOWED_VOICES = ['alba', 'marius', 'javert', 'jean', 'fantine', 'cosette', 'eponine', 'azelma']
 DEFAULT_VOICE = "azelma"
 

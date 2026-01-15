@@ -11,7 +11,7 @@ from audio_playback_handler import AudioPlaybackHandler
 
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-VENV_PYTHON = os.path.join(SCRIPT_DIR, "venv", "Scripts", "python.exe")
+VENV_PYTHON = os.path.join(SCRIPT_DIR, ".venv", "Scripts", "python.exe")
 
 # Setup logging
 logging.basicConfig(
