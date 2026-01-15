@@ -156,6 +156,114 @@ def generate():
         traceback.print_exc()
         return jsonify({"error": f"{type(e).__name__}: {str(e)}"}), 500
 
+# --- System Tray & Threading ---
+import threading
+import webbrowser
+import pystray
+import requests
+import simpleaudio as sa
+from PIL import Image, ImageDraw
+
+def create_image():
+    """Create a 'Melting Face' style icon."""
+    width = 64
+    height = 64
+    # Emoji Yellow
+    bg_color = (255, 224, 66)
+    # Eye/Mouth Color (Dark Brown)
+    feature_color = (139, 69, 19)
+    
+    image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    dc = ImageDraw.Draw(image)
+    
+    # Yellow Face Circle
+    dc.ellipse((0, 0, width, height), fill=bg_color)
+    
+    # Eyes (Lopsided as if melting)
+    dc.ellipse((18, 20, 26, 32), fill=feature_color) # Left Eye
+    dc.ellipse((38, 24, 46, 36), fill=feature_color) # Right (drooping)
+    
+    # Melting Mouth
+    # A simple curve that drips down
+    # Points for a polygon or wide line that looks melty
+    dc.arc((16, 38, 48, 54), start=0, end=180, fill=feature_color, width=3)
+    
+    # Drip on the side
+    dc.polygon([(45, 50), (55, 50), (50, 62)], fill=bg_color)
+    
+    # Draw a "puddle" at the bottom to signify melting
+    dc.chord((10, 50, 54, 64), 0, 180, fill=bg_color)
+
+    return image
+
+def on_quit(icon, item):
+    icon.stop()
+    os._exit(0)  # Force exit to kill Flask thread
+
+def on_status(icon, item):
+    webbrowser.open("http://localhost:5050/status")
+
+def on_settings(icon, item):
+    """Open the config file in the default editor."""
+    config_path = os.path.join(BASE_DIR, "tts_config.json")
+    try:
+        os.startfile(config_path)
+    except Exception as e:
+        logging.error(f"Failed to open settings: {e}")
+
+def on_restart(icon, item):
+    """Restart the application."""
+    icon.stop()
+    logging.info("Restarting server...")
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+def on_say_hello(icon, item):
+    """Send a request to self to speak."""
+    def _speak():
+        try:
+            # Use 'requests' to hit the local endpoint
+            resp = requests.post("http://localhost:5050/generate", json={
+                "text": "Hello there! I am Erika, your voice assistant.",
+                "lang": "en"
+            })
+            if resp.status_code == 200:
+                # Save temp file and play it
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                    f.write(resp.content)
+                    temp_path = f.name
+                
+                # Play
+                wave_obj = sa.WaveObject.from_wave_file(temp_path)
+                play_obj = wave_obj.play()
+                play_obj.wait_done()
+                os.unlink(temp_path)
+        except Exception as e:
+            logging.error(f"Say Hello failed: {e}")
+            
+    threading.Thread(target=_speak, daemon=True).start()
+
+def run_flask():
+    app.run(host='0.0.0.0', port=5050, threaded=True, use_reloader=False)
+
+def setup_tray():
+    icon = pystray.Icon("Erika TTS")
+    icon.icon = create_image()
+    icon.title = "Erika VibeVoice Server"
+    icon.menu = pystray.Menu(
+        pystray.MenuItem("Status Check", on_status),
+        pystray.MenuItem("Settings", on_settings),
+        pystray.MenuItem("Say Hello", on_say_hello),
+        pystray.MenuItem("Restart", on_restart),
+        pystray.MenuItem("Quit", on_quit)
+    )
+    icon.run()
+
 if __name__ == '__main__':
     logging.info("Starting VibeVoice TTS Server on port 5050...")
-    app.run(host='0.0.0.0', port=5050, threaded=True)
+    
+    # Run Flask in a background thread
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    
+    # Run Tray in main thread
+    setup_tray()

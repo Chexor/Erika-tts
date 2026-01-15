@@ -22,3 +22,5 @@ fastapi
 uvicorn[standard]
 llvmlite
 numba
+pystray
+Pillow
