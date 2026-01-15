@@ -1,127 +1,73 @@
-# Erika TTS
+# Erika TTS: High-Fidelity VibeVoice & Kokoro Integration
 
-A personalized Text-to-Speech wrapper using [Kyutai's Pocket TTS](https://github.com/kyutai-labs/pocket-tts) library with voice cloning capabilities.
+Erika TTS is a premium Text-to-Speech system designed for the Gemini CLI and general use, featuring state-of-the-art naturalness for both Dutch and English.
 
-## About Pocket TTS
-
-Pocket TTS is a lightweight 100M parameter TTS model from [Kyutai](https://kyutai.org/tts) optimized for CPU execution.
-
-**Key specs:**
-- ~6x faster than real-time on modern CPUs
-- ~200ms latency to first audio chunk
-- Uses only 2 CPU cores
-- Supports streaming audio generation
-- English only (currently)
-- Can process infinitely long text inputs
-
-**Resources:**
-- [GitHub](https://github.com/kyutai-labs/pocket-tts)
-- [Hugging Face](https://huggingface.co/kyutai/pocket-tts)
-- [Voices Repository](https://huggingface.co/kyutai/tts-voices)
+## Features
+- **Microsoft VibeVoice (0.5B)**: Exclusive high-fidelity engine for "awesome" quality Dutch and English.
+- **Cross-Lingual Support**: VibeVoice allows voices to speak multiple languages with natural accents.
+- **Kokoro-ONNX**: Extremely fast and efficient English engine (maintained as a lightweight option).
+- **Hybrid Architecture**: A Flask-based server handles model management and lazy loading to optimize VRAM usage.
+- **Visible Worker**: Desktop notifications/popup windows for speech status.
 
 ## Setup
 
-1. Create and activate virtual environment:
+1. **Environment**:
    ```bash
-   python -m venv venv
-   .\venv\Scripts\activate
-   ```
-
-2. Install dependencies:
-   ```bash
+   python -m venv .venv
+   .\.venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
+2. **Models**:
+   - Ensure the `VibeVoice` repository is cloned in the root directory.
+   - Download the `VibeVoice-Realtime-0.5B` model from Hugging Face if not present.
+   - Place voice presets (.pt files) in `VibeVoice/demo/voices/streaming_model/`.
+
+3. **Running the Server**:
+   ```bash
+   python tts_server.py
+   ```
+   The server runs on port `5050` and handles lazy initialization of models.
+
 ## Usage
 
-### Erika Wrapper Script (Recommended)
-
-The `Erika-tts.py` script provides a convenient wrapper with automatic audio playback:
-
+### Gemini CLI (MCP)
+Add Erika to your Gemini CLI as an MCP tool:
 ```bash
-# Basic usage (if erika-tts.bat is in PATH)
-erika-tts "Hello, this is a test."
-
-# With custom voice
-erika-tts "Hello" --voice alba
-
-# With custom output filename
-erika-tts "Hello" --output my_speech.wav
+gemini mcp add voice python gemini_voice_mcp.py
 ```
 
-### Configuration
-
-Edit `erika_settings.yaml` to customize defaults:
-
-```yaml
-default_voice: azelma
-output_folder_name: erika_tts_output
-max_audio_files: 5
-generation_settings:
-  temperature: 0.7
-  lsd_decode_steps: 1
-  device: cpu
-```
-
-### Available Voices
-
-`alba`, `marius`, `javert`, `jean`, `fantine`, `cosette`, `eponine`, `azelma`
-
-You can also use a path to a custom WAV file for voice cloning.
-
-### Direct pocket-tts CLI
-
+### Direct Worker usage
 ```bash
-# Generate speech
-pocket-tts generate --text "Hello world" --voice alba --output-path output.wav
-
-# Start web API server
-pocket-tts serve --host 0.0.0.0 --port 8000
+python speak_worker.py --text "Hello world" --voice "en-Emma_woman"
 ```
 
-## Generation Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `temperature` | 0.7 | Controls randomness (higher = more varied) |
-| `lsd_decode_steps` | 1 | Number of generation steps |
-| `eos_threshold` | -4.0 | End-of-speech detection threshold |
-| `device` | cpu | Use `cpu` or `cuda` |
-
-## Python API
-
-```python
-from pocket_tts import TTSModel
-import scipy.io.wavfile
-
-# Load model (slow, do once)
-tts_model = TTSModel.load_model()
-
-# Load voice state (slow, cache if reusing)
-voice_state = tts_model.get_state_for_audio_prompt("alba")
-# Or use a custom WAV file:
-# voice_state = tts_model.get_state_for_audio_prompt("path/to/voice.wav")
-# Or from Hugging Face:
-# voice_state = tts_model.get_state_for_audio_prompt("hf://kyutai/tts-voices/alba-mackenna/casual.wav")
-
-# Generate audio (returns 1D torch tensor with PCM data)
-audio = tts_model.generate_audio(voice_state, "Hello world, this is a test.")
-
-# Save to file
-scipy.io.wavfile.write("output.wav", tts_model.sample_rate, audio.numpy())
+## Configuration (`tts_config.json`)
+Customize default engines and voices per language:
+```json
+{
+    "en": {
+        "engine": "vibevoice",
+        "voice": "en-Emma_woman"
+    },
+    "nl": {
+        "engine": "vibevoice",
+        "voice": "nl-Spk1_woman"
+    }
+}
 ```
 
-## Voice Cloning
+## Hardware Requirements
+- **GPU**: NVIDIA RTX 30-series or higher recommended for VibeVoice (requires ~2GB VRAM).
+- **OS**: Windows (optimized for PowerShell and `winsound`).
 
-You can clone any voice by providing a WAV file as the voice prompt. For best results:
-- Use clean audio samples without background noise
-- More voices available at [kyutai/tts-voices](https://huggingface.co/kyutai/tts-voices)
+## Persona Defaults
+- **Erika (English)**: Emma (`en-Emma_woman`)
+- **Erika (Dutch)**: Spk1 (`nl-Spk1_woman`)
 
-## Roadmap
+## Roadmap & Future Ideas
+- [ ] **Windows Context Menu Integration**: Add a "Read with Erika" option to the Windows right-click menu for instant TTS of any selected text or file.
+- [ ] **System-wide Hotkey**: Trigger speech for clipboard content using a global keyboard shortcut.
+- [ ] **Voice Cloning Interface**: A simple UI to easily clone new voices by dropping a 5-10 second WAV file.
+- [ ] **Streaming Playback**: Reduce latency further by playing audio chunks as they are generated.
 
-Planned features:
-- [ ] **File input** - Read text from a file (`--file input.txt`)
-- [ ] **MP3 export** - Convert output to MP3 format
-- [ ] **Streaming TTS** - Stream audio for larger texts instead of waiting for full generation
-- [ ] **System tray app** - Background app with hotkey to speak selected text
-- [ ] **Web API** - Local server for other apps to request TTS

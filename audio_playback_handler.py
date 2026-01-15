@@ -104,32 +104,24 @@ class AudioPlaybackHandler:
             logging.error(f"Failed to display text: {e}")
 
     def play_audio(self, file_path):
-        """Plays audio using PowerShell."""
+        """Plays audio using winsound (native Windows, headless)."""
         if not os.path.exists(file_path):
             logging.error(f"Audio file missing: {file_path}")
             return
             
         try:
-            logging.info("Attempting playback with Powershell")
-            # We use a specific Powershell command that loads the sound player, plays it, and waits.
-            ps_cmd = f'(New-Object Media.SoundPlayer "{file_path}").PlaySync()'
-            
-            start_time = time.time()
-            # USE CREATE_NO_WINDOW (0x08000000)
-            subprocess.run(
-                ["powershell", "-c", ps_cmd], 
-                check=True, 
-                creationflags=0x08000000
-            )
-            elapsed = time.time() - start_time
-            logging.info(f"Playback finished in {elapsed:.2f}s")
+            logging.info(f"Playing via winsound: {file_path}")
+            import winsound
+            # SND_FILENAME: The sound parameter is the name of a WAV file.
+            # SND_NODEFAULT: No default sound event is used.
+            winsound.PlaySound(file_path, winsound.SND_FILENAME | winsound.SND_NODEFAULT)
+            logging.info("Playback finished.")
             
         except Exception as e:
-            logging.error(f"Playback error: {e}")
-            # Fallback to os.startfile
+            logging.error(f"Winsound playback error: {e}")
+            # Fallback to os.startfile if winsound fails (unlikely for WAV)
             try:
                 logging.info("Fallback to os.startfile")
                 os.startfile(file_path)
-                time.sleep(5)
             except:
                 pass

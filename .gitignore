@@ -31,8 +31,21 @@ tts_output.WAV
 # Logs
 *.log
 
+# Models (Large Files)
+kokoro_models/
+piper_models/
+VibeVoice/demo/voices/streaming_model/*.pt
+huggingface_cache/
+
+# Data Files
+*.json
+!tts_config.json
+
 # Test outputs
-test_output.txt
+test_vibe_*.wav
+server.log
+mcp_debug.log
+worker_debug.log
 nul
 
 # Agent directories

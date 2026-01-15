@@ -18,15 +18,13 @@ mcp = FastMCP("gemini-voice")
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VENV_PYTHON = os.path.join(SCRIPT_DIR, ".venv", "Scripts", "python.exe")
-ALLOWED_VOICES = ['alba', 'marius', 'javert', 'jean', 'fantine', 'cosette', 'eponine', 'azelma']
-DEFAULT_VOICE = "azelma"
+ALLOWED_VOICES = ['en-Emma_woman', 'en-Grace_woman', 'en-Wayne_man', 'nl-Spk1_woman']
+DEFAULT_VOICE = "en-Emma_woman"
 
 
 def get_voice_path(voice: str) -> str:
-    """Resolve voice name or path."""
+    """Resolve voice name."""
     if voice in ALLOWED_VOICES:
-        return voice
-    if os.path.exists(voice):
         return voice
     return DEFAULT_VOICE
 
@@ -71,40 +69,48 @@ def spawn_worker(text: str, voice: str):
         return False
 
 @mcp.tool()
-async def speak(text: str, voice: str = DEFAULT_VOICE) -> str:
+async def speak_english(text: str) -> str:
     """
-    Convert text to speech and play it aloud.
-
-    Use this tool to speak your responses to the user. Call this at the end of
-    your response when you want the user to hear what you're saying.
+    Speak text in English using high-quality Microsoft VibeVoice.
+    Use this for all English responses.
 
     Args:
-        text: The text to convert to speech and play aloud
-        voice: Voice to use (alba, marius, javert, jean, fantine, cosette, eponine, azelma) or path to WAV file
-
-    Returns:
-        Confirmation that the speech generation has started
+        text: The English text to speak.
     """
     if not text or not text.strip():
-        return "Error: No text provided to speak"
+        return "Error: No text provided"
 
-    logging.info(f"Received speak request for: {text[:50]}...")
-    
-    if spawn_worker(text, voice):
-        return "🔊 Speaking..."
-    else:
-        return "Error starting speech"
+    logging.info(f"Received English speak request: {text[:50]}...")
+    if spawn_worker(text, "en-Emma_woman"):
+        return "🔊 Speaking (English)..."
+    return "Error starting speech"
 
+@mcp.tool()
+async def speak_dutch(text: str) -> str:
+    """
+    Speak text in Dutch using the "awesome" quality Microsoft VibeVoice engine.
+    Use this for all Dutch responses.
+
+    Args:
+        text: The Dutch text to speak.
+    """
+    if not text or not text.strip():
+        return "Error: No text provided"
+
+    logging.info(f"Received Dutch speak request: {text[:50]}...")
+    if spawn_worker(text, "nl-Spk1_woman"):
+        return "🔊 Spreken (Nederlands)..."
+    return "Error starting speech"
 
 @mcp.tool()
 def list_voices() -> str:
     """
-    List available voices for text-to-speech.
+    List available VibeVoice models.
 
     Returns:
         List of available voice names
     """
-    return f"Available voices: {', '.join(ALLOWED_VOICES)}\nDefault voice: {DEFAULT_VOICE}"
+    return f"Available VibeVoice models: {', '.join(ALLOWED_VOICES)}\nDefault: {DEFAULT_VOICE}"
 
 
 if __name__ == "__main__":

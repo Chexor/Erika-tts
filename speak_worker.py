@@ -33,10 +33,9 @@ def perform_speech(text, voice, input_file=None):
         lang_config, clean_text = interpreter.process(text)
         
         # Override voice if provided in args and not default
-        # But if we want the interpreter to decide, we should prioritize config?
-        # For now, let's respect the CLI arg if it's explicitly set to something standard
-        # But the interpreter returns the *config block* for the language.
-        # We can merge them.
+        if voice and voice != "default":
+            logging.info(f"Overriding voice from config ({lang_config.get('voice')}) with CLI arg: {voice}")
+            lang_config["voice"] = voice
         
         logging.info(f"Interpreted Language Config: {lang_config}")
         
