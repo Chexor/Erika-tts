@@ -45,14 +45,14 @@ def spawn_worker(text: str, voice: str):
     
     logging.info(f"Spawning worker: {cmd}")
     try:
-        # 0x00000010 = CREATE_NEW_CONSOLE | 0x00000200 = NEW_PROCESS_GROUP
+        # 0x08000000 = CREATE_NO_WINDOW
         subprocess.Popen(
             cmd,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             close_fds=True,
-            creationflags=0x00000010 | 0x00000200
+            creationflags=0x08000000
         )
         return True
     except Exception as e:

@@ -51,8 +51,8 @@ def get_vibevoice():
                 device_map=("cuda" if device == "cuda" else "cpu")
             )
             vibe_model.eval()
-            vibe_model.set_ddpm_inference_steps(num_steps=5)
-            logging.info("VibeVoice initialized.")
+            vibe_model.set_ddpm_inference_steps(num_steps=2)
+            logging.info("VibeVoice initialized with num_steps=2.")
         except Exception as e:
             logging.error(f"VibeVoice Init Failed: {e}")
             traceback.print_exc()
@@ -85,6 +85,7 @@ def status():
     return jsonify({
         "status": "running", 
         "engine": "vibevoice",
+        "num_steps": 2,
         "supported_languages": ["en", "nl", "de", "fr", "it", "jp", "kr", "pl", "pt", "sp"]
     })
 
@@ -114,7 +115,7 @@ def generate():
                 
         voice_segments = get_vibe_voice_preset(req_voice, lang, device)
         
-        logging.info(f"Generating VibeVoice {lang} ({req_voice}): {text[:30]}...")
+        logging.info(f"Generating VibeVoice {lang} ({req_voice}) [2-steps]: {text[:30]}...")
         
         with torch.no_grad():
             inputs = processor.process_input_with_cached_prompt(
@@ -135,7 +136,9 @@ def generate():
                 cfg_scale=1.5,
                 tokenizer=processor.tokenizer,
                 generation_config={'do_sample': True, 'top_p': 0.8, 'temperature': 0.8},
-                all_prefilled_outputs=copy.deepcopy(voice_segments)
+                all_prefilled_outputs=copy.deepcopy(voice_segments),
+                show_progress_bar=False,
+                verbose=False
             )
         
         if outputs.speech_outputs and outputs.speech_outputs[0] is not None:
